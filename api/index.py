@@ -1,11 +1,14 @@
 from http.server import BaseHTTPRequestHandler
 import json
 import requests
+from urllib.parse import urlparse, parse_qs
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
-        # ambil IP pengguna dari header
-        user_ip = self.headers.get('X-Forwarded-For', self.client_address[0])
+        # ambil IP dari query parameter jika ada
+        parsed_path = urlparse(self.path)
+        query_params = parse_qs(parsed_path.query)
+        user_ip = query_params.get('ip', [None])[0] or self.headers.get('X-Forwarded-For', self.client_address[0])
 
         # buat request ke ipinfo.io untuk data geolokasi
         token = "612faf773381a7"  # ganti dengan token ipinfo kamu
@@ -20,9 +23,9 @@ class handler(BaseHTTPRequestHandler):
             city = data.get("city")
             region = data.get("region")
             country = data.get("country")
-            hostname = data.get("hostname")
             loc = data.get("loc")  # formatnya "latitude,longitude"
             org = data.get("org")  # info ISP atau organisasi
+            hostname = data.get("hostname")  # mengambil hostname dari data
 
             # membagi latitude dan longitude
             latitude, longitude = loc.split(",") if loc else (None, None)
@@ -38,9 +41,9 @@ class handler(BaseHTTPRequestHandler):
                 "country": country,
                 "latitude": latitude,
                 "longitude": longitude,
-                "host": hostname,
                 "organization": org,
-                "map_link": map_link
+                "map_link": map_link,
+                "hostname": hostname  # gunakan hostname dari data IP
             }
         else:
             result = {"error": "could not retrieve location information"}
@@ -50,3 +53,4 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'application/json')
         self.end_headers()
         self.wfile.write(json.dumps(result).encode('utf-8'))
+        
