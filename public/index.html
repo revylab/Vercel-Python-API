@@ -19,39 +19,59 @@
             border-radius: 5px;
             background-color: #f9f9f9;
         }
+        input[type="text"] {
+            padding: 8px;
+            width: 300px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 8px 12px;
+        }
     </style>
 </head>
 <body>
     <h1>IP Location Information</h1>
+    <div>
+        <input type="text" id="ipInput" placeholder="Enter IP address" />
+        <button onclick="fetchData()">Search</button>
+    </div>
     <div class="info" id="info">
         Loading...
     </div>
 
     <script>
         async function fetchData() {
+            const ip = document.getElementById('ipInput').value;
+            const url = ip ? `/api?ip=${ip}` : '/api';
+
             try {
-                const response = await fetch('/api');
+                const response = await fetch(url);
                 const data = await response.json();
 
                 // menampilkan data di elemen info
                 const infoDiv = document.getElementById('info');
-                infoDiv.innerHTML = `
-                    <p><strong>IP:</strong> ${data.ip}</p>
-                    <p><strong>City:</strong> ${data.city}</p>
-                    <p><strong>Region:</strong> ${data.region}</p>
-                    <p><strong>Country:</strong> ${data.country}</p>
-                    <p><strong>Latitude:</strong> ${data.latitude}</p>
-                    <p><strong>Longitude:</strong> ${data.longitude}</p>
-                    <p><strong>Organization:</strong> ${data.organization}</p>
-                    <p><strong>Map:</strong> <a href="${data.map_link}" target="_blank">Open in Google Maps</a></p>
-                    <p><strong>Hostname:</strong> ${window.location.hostname}</p>
-                `;
+                if (data.error) {
+                    infoDiv.innerHTML = `<p>Error: ${data.error}</p>`;
+                } else {
+                    infoDiv.innerHTML = `
+                        <p><strong>IP:</strong> ${data.ip}</p>
+                        <p><strong>City:</strong> ${data.city}</p>
+                        <p><strong>Region:</strong> ${data.region}</p>
+                        <p><strong>Country:</strong> ${data.country}</p>
+                        <p><strong>Latitude:</strong> ${data.latitude}</p>
+                        <p><strong>Longitude:</strong> ${data.longitude}</p>
+                        <p><strong>Organization:</strong> ${data.organization}</p>
+                        <p><strong>Map:</strong> <a href="${data.map_link}" target="_blank">Open in Google Maps</a></p>
+                        <p><strong>Hostname:</strong> ${data.hostname}</p>
+                    `;
+                }
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
         }
 
-        // memanggil fungsi fetchData saat halaman dimuat
+        // memanggil fungsi fetchData saat halaman
+ dimuat
         window.onload = fetchData;
     </script>
 </body>
