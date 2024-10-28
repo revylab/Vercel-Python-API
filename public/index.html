@@ -27,21 +27,30 @@
         button {
             padding: 8px 12px;
         }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <h1>IP Location Information</h1>
     <div>
+        <button onclick="toggleSearch()">Toggle Search IP</button>
+    </div>
+
+    <div id="infoContainer" class="info">
+        <div id="info">
+            Loading...
+        </div>
+    </div>
+
+    <div id="searchContainer" class="hidden">
         <input type="text" id="ipInput" placeholder="Enter IP address" />
         <button onclick="fetchData()">Search</button>
     </div>
-    <div class="info" id="info">
-        Loading...
-    </div>
 
     <script>
-        async function fetchData() {
-            const ip = document.getElementById('ipInput').value;
+        async function fetchData(ip) {
             const url = ip ? `/api?ip=${ip}` : '/api';
 
             try {
@@ -70,9 +79,26 @@
             }
         }
 
-        // memanggil fungsi fetchData saat halaman
- dimuat
-        window.onload = fetchData;
+        function toggleSearch() {
+            const infoContainer = document.getElementById('infoContainer');
+            const searchContainer = document.getElementById('searchContainer');
+            const ip = document.getElementById('ipInput').value;
+
+            if (infoContainer.classList.contains('hidden')) {
+                infoContainer.classList.remove('hidden');
+                searchContainer.classList.add('hidden');
+                fetchData(); // fetch info for user's IP
+            } else {
+                infoContainer.classList.add('hidden');
+                searchContainer.classList.remove('hidden');
+                document.getElementById('ipInput').value = ''; // clear input field
+            }
+        }
+
+        // memanggil fungsi fetchData saat halaman dimuat untuk informasi IP pengguna
+        window.onload = () => {
+            fetchData(); // fetch info for user's IP on load
+        };
     </script>
 </body>
 </html>
