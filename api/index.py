@@ -20,7 +20,7 @@ class handler(BaseHTTPRequestHandler):
             city = data.get("city")
             region = data.get("region")
             country = data.get("country")
-            host = data.get("hostname")
+            hostname = data.get("hostname")
             loc = data.get("loc")  # formatnya "latitude,longitude"
             org = data.get("org")  # info ISP atau organisasi
 
