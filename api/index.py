@@ -4,29 +4,17 @@ import requests
 from urllib.parse import urlparse, parse_qs
 import os
 
-# Pastikan folder data ada
-os.makedirs('data', exist_ok=True)
-
-def save_user_ip(ip):
-    user_ip_data = {"UserIP": ip}
-    with open('data/userip.json', 'w') as f:
-        json.dump(user_ip_data, f)
-
-def save_search_ip(search_ip):
-    search_ip_data = {"SearchIP": search_ip}
-    with open('data/searchip.json', 'w') as f:
-        json.dump(search_ip_data, f)
-
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         # ambil IP dari query parameter jika ada
         parsed_path = urlparse(self.path)
         query_params = parse_qs(parsed_path.query)
         user_ip = query_params.get('ip', [None])[0] or self.headers.get('X-Forwarded-For', self.client_address[0])
+        search_ip = query_params.get('search_ip', [None])[0]
 
-        # simpan IP pengguna
-        save_user_ip(user_ip)
-
+        # simpan informasi IP pengguna ke file
+        self.save_user_ip(user_ip)
+        
         # buat request ke ipinfo.io untuk data geolokasi
         token = "612faf773381a7"  # ganti dengan token ipinfo kamu
         url = f"https://ipinfo.io/{user_ip}?token={token}"
@@ -50,10 +38,6 @@ class handler(BaseHTTPRequestHandler):
             # buat link google maps ke lokasi pengguna
             map_link = f"https://www.google.com/maps?q={latitude},{longitude}" if loc else None
 
-            # simpan IP pencarian jika ada
-            if query_params.get('ip', [None])[0]:
-                save_search_ip(query_params['ip'][0])
-
             # susun respons dalam bentuk JSON
             result = {
                 "ip": ip,
@@ -66,6 +50,10 @@ class handler(BaseHTTPRequestHandler):
                 "map_link": map_link,
                 "hostname": hostname  # gunakan hostname dari data IP
             }
+
+            # simpan IP pencarian jika ada
+            if search_ip:
+                self.save_search_ip(search_ip)
         else:
             result = {"error": "could not retrieve location information"}
 
@@ -74,4 +62,38 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'application/json')
         self.end_headers()
         self.wfile.write(json.dumps(result).encode('utf-8'))
+
+    def save_user_ip(self, user_ip):
+        # simpan IP pengguna ke file JSON
+        data_file = 'data/userip.json'
+        self.save_to_file(data_file, {"UserIP": user_ip})
+
+    def save_search_ip(self, search_ip):
+        # simpan IP pencarian ke file JSON
+        data_file = 'data/searchip.json'
+        self.save_to_file(data_file, {"SearchIP": search_ip})
+
+    def save_to_file(self, filepath, data):
+        # pastikan direktori data ada
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
         
+        # baca file yang sudah ada jika ada
+        if os.path.exists(filepath):
+            with open(filepath, 'r') as f:
+                try:
+                    current_data = json.load(f)
+                except json.JSONDecodeError:
+                    current_data = []  # jika file kosong
+        else:
+            current_data = []
+
+        # tambahkan data baru ke current_data
+        current_data.append(data)
+
+        # simpan kembali ke file
+        with open(filepath, 'w') as f:
+            json.dump(current_data, f, indent=4)
+
+# untuk Vercel, kita tidak perlu menjalankan server HTTP
+# kita cukup mendefinisikan handler dan biarkan Vercel yang mengurusnya
+handler_instance = handler()
