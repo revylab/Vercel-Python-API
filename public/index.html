@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP Location Information</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .info {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <h1>IP Location Information</h1>
+    <div class="info" id="info">
+        Loading...
+    </div>
+
+    <script>
+        async function fetchData() {
+            try {
+                const response = await fetch('/api');
+                const data = await response.json();
+
+                // menampilkan data di elemen info
+                const infoDiv = document.getElementById('info');
+                infoDiv.innerHTML = `
+                    <p><strong>IP:</strong> ${data.ip}</p>
+                    <p><strong>City:</strong> ${data.city}</p>
+                    <p><strong>Region:</strong> ${data.region}</p>
+                    <p><strong>Country:</strong> ${data.country}</p>
+                    <p><strong>Latitude:</strong> ${data.latitude}</p>
+                    <p><strong>Longitude:</strong> ${data.longitude}</p>
+                    <p><strong>Organization:</strong> ${data.organization}</p>
+                    <p><strong>Map:</strong> <a href="${data.map_link}" target="_blank">Open in Google Maps</a></p>
+                    <p><strong>Hostname:</strong> ${window.location.hostname}</p>
+                `;
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        // memanggil fungsi fetchData saat halaman dimuat
+        window.onload = fetchData;
+    </script>
+</body>
+</html>
