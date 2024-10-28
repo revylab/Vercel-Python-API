@@ -2,6 +2,20 @@ from http.server import BaseHTTPRequestHandler
 import json
 import requests
 from urllib.parse import urlparse, parse_qs
+import os
+
+# Pastikan folder data ada
+os.makedirs('data', exist_ok=True)
+
+def save_user_ip(ip):
+    user_ip_data = {"UserIP": ip}
+    with open('data/userip.json', 'w') as f:
+        json.dump(user_ip_data, f)
+
+def save_search_ip(search_ip):
+    search_ip_data = {"SearchIP": search_ip}
+    with open('data/searchip.json', 'w') as f:
+        json.dump(search_ip_data, f)
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -9,6 +23,9 @@ class handler(BaseHTTPRequestHandler):
         parsed_path = urlparse(self.path)
         query_params = parse_qs(parsed_path.query)
         user_ip = query_params.get('ip', [None])[0] or self.headers.get('X-Forwarded-For', self.client_address[0])
+
+        # simpan IP pengguna
+        save_user_ip(user_ip)
 
         # buat request ke ipinfo.io untuk data geolokasi
         token = "612faf773381a7"  # ganti dengan token ipinfo kamu
@@ -32,6 +49,10 @@ class handler(BaseHTTPRequestHandler):
 
             # buat link google maps ke lokasi pengguna
             map_link = f"https://www.google.com/maps?q={latitude},{longitude}" if loc else None
+
+            # simpan IP pencarian jika ada
+            if query_params.get('ip', [None])[0]:
+                save_search_ip(query_params['ip'][0])
 
             # susun respons dalam bentuk JSON
             result = {
